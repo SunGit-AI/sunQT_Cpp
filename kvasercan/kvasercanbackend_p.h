@@ -2,13 +2,14 @@
 #define KVASERCANBACKENDPRIVATE_H
 
 #include"kvasercanbackend.h"
-
+#include<QVector>
 
 QT_BEGIN_NAMESPACE
 
 class QSocketNotifier;
 class QWinEventNotifier;
 class QTimer;
+
 
 class KvaserCanBackendPrivate
 {
@@ -20,22 +21,21 @@ public:
     bool open();
     void close();
     bool setConfigurationParameter(int key, const QVariant &value);
-    void setupChannel(const QByteArray &interfaceName);
-    void setupDefaultConfigurations();
-    QString systemErrorString(int errorCode);
+    void setupChannel(const QString &interfaceName);
+    void setupDefaultConfigurations(void);
+    QString systemErrorString(canStatus ST_ErrorCode_In);
     void startWrite();
     void startRead();
     bool verifyBitRate(int bitrate);
-    bool isFlexibleDatarateEnabled = false;
     bool isOpen = false;
     QTimer *writeNotifier = nullptr;
 
+    KvaserCanConfig kvaserCanConfig={.i_canHandle=-1, .i_selectedChannel=-1};
+    void setKvaserCanConfig(void);
+    bool enable_Witness=true;
 
-    /*
-private:
-    KvaserCanBackend * const q_ptr;
-    //Q_DECLARE_PUBLIC(KvaserCanBackend);
-    */
+    QWinEventNotifier *readNotifier = nullptr;
+    HANDLE readHandle  = INVALID_HANDLE_VALUE;
 
 
 };

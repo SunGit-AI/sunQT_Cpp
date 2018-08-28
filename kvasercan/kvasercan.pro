@@ -24,7 +24,13 @@ HEADERS += \
     canlib.h \
     canstat.h \
     obsolete.h \
-    predef.h
+    predef.h \
+    canstat.h
+
+win32 {
+  INCLUDEPATH += Your path here!
+  LIBS        += $$PWD/canlib32.a
+}
 
 DISTFILES = plugin.json \
     canlib32.lib

@@ -3,8 +3,6 @@
 
 #include "kvasercan_global.h"
 
-#include"canlib.h"
-
 #include<QtSerialBus/QCanBusDevice>
 #include<QtSerialBus/QCanBusFrame>
 
@@ -25,11 +23,10 @@ public:
     void close() override;
     void setConfigurationParameter(int key, const QVariant &value) override;
     bool writeFrame(const QCanBusFrame &newData) override;
-    bool waitForFramesWritten(int msecs) override;
-    bool waitForFramesReceived(int msecs) override;
     QString interpretErrorFrame(const QCanBusFrame &errorFrame) override;
     static bool canCreate(QString *errorReason);
     static QList<QCanBusDeviceInfo> interfaces();
+    bool enable_Witness=true;
 
 private:
 
