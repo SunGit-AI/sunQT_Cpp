@@ -3,6 +3,7 @@
 
 #include"kvasercanbackend.h"
 #include<QVector>
+#include "witness.h"
 
 QT_BEGIN_NAMESPACE
 
@@ -35,7 +36,7 @@ public:
     bool enable_Witness=true;
 
     QWinEventNotifier *readNotifier = nullptr;
-    HANDLE readHandle  = INVALID_HANDLE_VALUE;
+    HANDLE event_readHandle  = INVALID_HANDLE_VALUE;
 
 
 };

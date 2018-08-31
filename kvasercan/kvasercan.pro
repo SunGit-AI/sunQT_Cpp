@@ -14,7 +14,8 @@ DEFINES += QT_DEPRECATED_WARNINGS
 
 SOURCES += \
         kvasercanbackend.cpp \
-    main.cpp
+    main.cpp \
+    witness.cpp
 
 HEADERS += \
         kvasercanbackend.h \
@@ -25,7 +26,8 @@ HEADERS += \
     canstat.h \
     obsolete.h \
     predef.h \
-    canstat.h
+    canstat.h \
+    witness.h
 
 win32 {
   INCLUDEPATH += Your path here!

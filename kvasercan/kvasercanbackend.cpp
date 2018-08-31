@@ -61,7 +61,7 @@ public:
         : QWinEventNotifier(parent)
         , dptr(d)
     {
-        setHandle(dptr->readHandle);
+        setHandle(dptr->event_readHandle);
     }
 
 protected:
@@ -99,7 +99,7 @@ QList<QCanBusDeviceInfo> KvaserCanBackend::interfaces()
     return result;
 }
 
-
+bool Witness::enable_Witness=true;
 
 KvaserCanBackendPrivate::KvaserCanBackendPrivate(KvaserCanBackend *q)
     : q_ptr(q)
@@ -166,54 +166,54 @@ bool KvaserCanBackendPrivate::verifyBitRate(int bitrate)
 bool KvaserCanBackendPrivate::open()
 {
     Q_Q(KvaserCanBackend);
-    if(enable_Witness)
+    if(Witness::enable_Witness)
     {
-        qDebug()<<QString("Witness:Location: %1 ").arg("KvaserCanBackendPrivate::open:");//.arg("Variable:");
+        qDebug()<<QString("%1: %2 ").arg(Witness::strLocation).arg("KvaserCanBackendPrivate::open:");//.arg("Variable:");
     }
-    const int bitrate = q->configurationParameter(QCanBusDevice::BitRateKey).toInt();
-    kvaserCanConfig.i_bitrateCode = bitrateCodeFromBitrate(bitrate);
-    canStatus status = canSetBusParams(kvaserCanConfig.i_canHandle, kvaserCanConfig.i_bitrateCode, kvaserCanConfig.ui_tseg1, kvaserCanConfig.ui_tseg2, kvaserCanConfig.ui_sjw, kvaserCanConfig.ui_noSamp, kvaserCanConfig.ui_syncmode);
+    const int conI_bitrate = q->configurationParameter(QCanBusDevice::BitRateKey).toInt();
+    kvaserCanConfig.i_bitrateCode = bitrateCodeFromBitrate(conI_bitrate);
+    canStatus e_status = canSetBusParams(kvaserCanConfig.i_canHandle, kvaserCanConfig.i_bitrateCode, kvaserCanConfig.ui_tseg1, kvaserCanConfig.ui_tseg2, kvaserCanConfig.ui_sjw, kvaserCanConfig.ui_noSamp, kvaserCanConfig.ui_syncmode);
 
-    if(enable_Witness)
+    if(Witness::enable_Witness)
     {
-        if (status != canOK)
+        if (e_status != canOK)
         {
-          qDebug()<<QString("Witness:Location: %1 : %2: %3 %4").arg("KvaserCanBackendPrivate::open:").arg("Event").arg("canSetBusParams() failed, ").arg(status);
+          qDebug()<<QString("%1 %2 : %3: %4 %5").arg(Witness::strLocation).arg("KvaserCanBackendPrivate::open:").arg(Witness::strEvt_FunctionFailed).arg("canSetBusParams(): ").arg(e_status);
         }
     }
-    if (Q_UNLIKELY(status < canOK))
+    if (Q_UNLIKELY(e_status < canOK))
     {
-        q->setError(systemErrorString(status), QCanBusDevice::ConfigurationError);
+        q->setError(systemErrorString(e_status), QCanBusDevice::ConfigurationError);
         return false;
     }
-    status = canBusOn(kvaserCanConfig.i_canHandle);
-    if(enable_Witness)
+    e_status = canBusOn(kvaserCanConfig.i_canHandle);
+    if(Witness::enable_Witness)
     {
-        if (status != canOK)
+        if (e_status != canOK)
         {
-          qDebug()<<QString("Witness:Location: %1 : %2: %3 %4").arg("KvaserCanBackendPrivate::open:").arg("Event").arg("canBusOn() failed, ").arg(status);
+          qDebug()<<QString("Witness:Location: %1 : %2: %3 %4").arg("KvaserCanBackendPrivate::open:").arg("Event").arg("canBusOn() failed, ").arg(e_status);
         }
     }
-    if (Q_UNLIKELY(status < canOK))
+    if (Q_UNLIKELY(e_status < canOK))
     {
-        q->setError(systemErrorString(status), QCanBusDevice::ConnectionError);
+        q->setError(systemErrorString(e_status), QCanBusDevice::ConnectionError);
         return false;
     }
-    if(readHandle==INVALID_HANDLE_VALUE)
+    if(event_readHandle==INVALID_HANDLE_VALUE)
     {
-        readHandle=CreateEvent(NULL, TRUE, FALSE, TEXT("RxEvent"));
+        event_readHandle=CreateEvent(NULL, TRUE, FALSE, TEXT("RxEvent"));
     }
-    status = canIoCtl (kvaserCanConfig.i_canHandle, canIOCTL_GET_EVENTHANDLE, &readHandle, sizeof (readHandle));
-    if(enable_Witness)
+    e_status = canIoCtl (kvaserCanConfig.i_canHandle, canIOCTL_GET_EVENTHANDLE, &event_readHandle, sizeof (event_readHandle));
+    if(Witness::enable_Witness)
     {
-        if (status != canOK)
+        if (e_status != canOK)
         {
-          qDebug()<<QString("Witness:Location: %1 : %2: %3 %4").arg("KvaserCanBackendPrivate::open:").arg("Event").arg("canIoCtl canIOCTL_GET_EVENTHANDLE() failed, ").arg(status);
+          qDebug()<<QString("Witness:Location: %1 : %2: %3 %4").arg("KvaserCanBackendPrivate::open:").arg("Event").arg("canIoCtl canIOCTL_GET_EVENTHANDLE() failed, ").arg(e_status);
         }
     }
-    if (Q_UNLIKELY(status < canOK))
+    if (Q_UNLIKELY(e_status < canOK))
     {
-        q->setError(systemErrorString(status), QCanBusDevice::ConfigurationError);
+        q->setError(systemErrorString(e_status), QCanBusDevice::ConfigurationError);
         return false;
     }
 
@@ -240,34 +240,38 @@ void KvaserCanBackendPrivate::close()
     delete readNotifier;
     readNotifier = nullptr;
     canBusOff(kvaserCanConfig.i_canHandle);
-
 }
 void KvaserCanBackendPrivate::setupChannel(const QString &interfaceName)
 {
     Q_Q(KvaserCanBackend);
-    canStatus stat;
-    int channels;
-    if(enable_Witness)
+    canStatus e_status;
+    int i_channelNumber;
+    if(Witness::enable_Witness)
     {
-        qDebug()<<QString("Witness:Location: %1 ").arg("KvaserCanBackendPrivate::setupChannel:");//.arg("Variable:");
+        qDebug()<<QString("%1 %2 ").arg(Witness::strLocation).arg("KvaserCanBackendPrivate::setupChannel:");
     }
-    stat = canGetNumberOfChannels(&channels);
+    e_status = canGetNumberOfChannels(&i_channelNumber);
 
-    if (stat < canOK) {
+    if (e_status < canOK)
+    {
       qDebug("canGetNumberOfChannels() failed");
     }
-    if (Q_UNLIKELY(stat < canOK))
-        q->setError(systemErrorString(stat), QCanBusDevice::ConfigurationError);
+    if (Q_UNLIKELY(e_status < canOK))
+        q->setError(systemErrorString(e_status), QCanBusDevice::ConfigurationError);
 
-    for (int i=0; i<channels; i++) {
-      char name[64];
-      stat = canGetChannelData(i, canCHANNELDATA_CHANNEL_NAME, name, sizeof(name));
-       qDebug()<<"Witness:Location: KvaserCanBackendPrivate:setupChannel:Witness:Event:Variable:name: "<<name;
-      if(QString::compare(QLatin1String(name), interfaceName, Qt::CaseInsensitive)==0)
+    for (int i=0; i<i_channelNumber; i++)
+    {
+      char charAry_channelName[64];
+      e_status = canGetChannelData(i, canCHANNELDATA_CHANNEL_NAME, charAry_channelName, sizeof(charAry_channelName));
+      if(Witness::enable_Witness)
+      {
+       qDebug()<<QString("%1 %2 %3 %4 %5").arg(Witness::strLocation).arg("KvaserCanBackendPrivate:setupChannel:").arg(Witness::strVariable).arg("name: ").arg(charAry_channelName);
+      }
+      if(QString::compare(QLatin1String(charAry_channelName), interfaceName, Qt::CaseInsensitive)==0)
       {
           kvaserCanConfig.i_selectedChannel=i;
           canGetChannelData(i, canCHANNELDATA_CHANNEL_NAME, kvaserCanConfig.ca_selectedInterfaceName, sizeof(kvaserCanConfig.ca_selectedInterfaceName));
-          if(enable_Witness)
+          if(Witness::enable_Witness)
           {
               qDebug()<<QString("Witness:Location: %1 Witness:Event: %2 kvaserCanConfig.i_selectedChannel: %3").arg("KvaserCanBackendPrivate::setupChannel::").arg("Variable:").arg(kvaserCanConfig.i_selectedChannel);
           }
@@ -292,7 +296,7 @@ void KvaserCanBackendPrivate::setKvaserCanConfig()
     kvaserCanConfig.ui_sjw=0;
 
     kvaserCanConfig.i_canHandle = canOpenChannel(kvaserCanConfig.i_selectedChannel, kvaserCanConfig.i_openChanelFlags);
-    if(enable_Witness)
+    if(Witness::enable_Witness)
     {
         qDebug()<<QString("Witness:Location: %1 Witness:Event: %2 kvaserCanConfig.i_selectedChannel: %3, kvaserCanConfig.i_canHandle: %4").arg("KvaserCanBackendPrivate::setKvaserCanConfig:").arg("Variable:").arg(kvaserCanConfig.i_selectedChannel).arg(kvaserCanConfig.i_canHandle);
     }
@@ -339,35 +343,35 @@ void KvaserCanBackendPrivate::startWrite()
         return;
     }
 
-    if(enable_Witness)
+    if(Witness::enable_Witness)
     {
         qDebug()<<QString("Witness:Location: %1 ").arg("KvaserCanBackendPrivate::startWrite:");//.arg("Variable:").arg(kvaserCanConfig.i_selectedChannel).arg(kvaserCanConfig.i_canHandle);
     }
     const QCanBusFrame frame = q->dequeueOutgoingFrame();
     const QByteArray payload = frame.payload();
 
-    CanMessage message;
-    ::memset(&message, 0, sizeof(message));
+    CanMessage strct_message;
+    ::memset(&strct_message, 0, sizeof(strct_message));
 
-    message.id = frame.frameId();
-    message.dlc = payload.size();
-    message.flags = frame.hasExtendedFrameFormat() ? canMSG_EXT : canMSG_STD;
+    strct_message.id = frame.frameId();
+    strct_message.dlc = payload.size();
+    strct_message.flags = frame.hasExtendedFrameFormat() ? canMSG_EXT : canMSG_STD;
 
     if (frame.frameType() == QCanBusFrame::RemoteRequestFrame)
-        message.flags |= canMSG_RTR; // we do not care about the payload
+        strct_message.flags |= canMSG_RTR; // we do not care about the payload
     else
-        ::memcpy(message.data, payload.constData(), sizeof(message.data));
+        ::memcpy(strct_message.data, payload.constData(), sizeof(strct_message.data));
 
-    const canStatus st = canWrite(kvaserCanConfig.i_canHandle, message.id, message.data, message.dlc, message.flags);
+    const canStatus st = canWrite(kvaserCanConfig.i_canHandle, strct_message.id, strct_message.data, strct_message.dlc, strct_message.flags);
     if (Q_UNLIKELY(st != canOK))
         //q->setError(systemErrorString(st), QCanBusDevice::WriteError);
         q->setError("systemErrorString(st)", QCanBusDevice::WriteError);
     else
         emit q->framesWritten(qint64(1));
 
-    if(enable_Witness)
+    if(Witness::enable_Witness)
     {
-        qDebug()<<QString("Witness:Location: %1 %2: message id: %3, message dlc: %4").arg("KvaserCanBackendPrivate::startWrite:").arg("Witness:Event: Variable:").arg(message.id).arg(message.dlc);
+        qDebug()<<QString("Witness:Location: %1 %2: message id: %3, message dlc: %4").arg("KvaserCanBackendPrivate::startWrite:").arg("Witness:Event: Variable:").arg(strct_message.id).arg(strct_message.dlc);
     }
 
     if (q->hasOutgoingFrames() && !writeNotifier->isActive())
@@ -377,7 +381,7 @@ void KvaserCanBackendPrivate::startWrite()
 void KvaserCanBackendPrivate::startRead()
 {
     Q_Q(KvaserCanBackend);
-    if(enable_Witness)
+    if(Witness::enable_Witness)
     {
         qDebug()<<QString("Witness:Location: %1 ").arg("KvaserCanBackendPrivate::startRead:");//.arg("Variable:").arg(kvaserCanConfig.i_selectedChannel).arg(kvaserCanConfig.i_canHandle);
     }
@@ -385,12 +389,11 @@ void KvaserCanBackendPrivate::startRead()
     QVector<QCanBusFrame> newFrames;
 
     CanMessage msg;
-    canStatus status;
-
+    canStatus e_status;
     do
     {
-        status = canRead(kvaserCanConfig.i_canHandle, &msg.id, &msg.data, &msg.dlc, &msg.flags, &msg.time);
-        if (status == canOK)
+        e_status = canRead(kvaserCanConfig.i_canHandle, &msg.id, &msg.data, &msg.dlc, &msg.flags, &msg.time);
+        if (e_status == canOK)
         {
             QCanBusFrame frame(msg.id, QByteArray((const char *)(msg.data), int(msg.dlc)));//reinterpret_cast<const char *>
             frame.setTimeStamp(QCanBusFrame::TimeStamp::fromMicroSeconds(msg.time*1000));
@@ -403,9 +406,9 @@ void KvaserCanBackendPrivate::startRead()
 
             newFrames.append(std::move(frame));
         }
-    }while (status == canOK);
+    }while (e_status == canOK);
 
-    q->enqueueReceivedFrames(newFrames);
+    q->enqueueReceivedFrames(newFrames);//this will trigger QCanBusDevice::framesReceived signal
 
 }
 
@@ -417,7 +420,7 @@ bool KvaserCanBackendPrivate::setConfigurationParameter(int key, const QVariant 
 
     switch (key) {
     case QCanBusDevice::BitRateKey:
-        if(enable_Witness)
+        if(Witness::enable_Witness)
         {
             qDebug()<<QString("Witness:Location: %1 Witness:Event: %2 key: %3, value: %4").arg("KvaserCanBackendPrivate:setConfigurationParameter:").arg("Variable:").arg(key).arg(value.toInt());
         }
@@ -452,7 +455,7 @@ KvaserCanBackend::~KvaserCanBackend()
 bool KvaserCanBackend::open()
 {
     Q_D(KvaserCanBackend);
-    if(enable_Witness)
+    if(Witness::enable_Witness)
     {
         qDebug()<<QString("Witness:Location: %1").arg("KvaserCanBackend::open:");//.arg("Variable:").arg(key).arg(value.toInt());
     }
