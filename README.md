@@ -8,6 +8,9 @@ http://download.qt.io/archive/qt/5.9/
 2. open qt-everywhere-opensource-src-5.9.1\qtserialbus\qtserialbus.pro with qt-creator.
 3. creator plugin sub-project under qt-everywhere-opensource-src-5.9.1\qtserialbus\src\plugins\canbus\
 4. build Dlls and place to QT plugins directory
+5. qtCanAdapter = QCanBus::instance()->createDevice(pluginName, &errorString);
+6. and go
+
 
 QT CAN BUS description:\
 https://doc.qt.io/qt-5/qtcanbus-backends.html
